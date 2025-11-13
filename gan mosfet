@@ -15,16 +15,16 @@
   .row { display:flex; align-items:center; gap:10px; margin-bottom:14px; font-size:14px; }
   .slider { width:100%; }
   .value { width:45px; font-weight:600; color:#0b2545; text-align:right; }
-  canvas { background:white; border-radius:10px; height:350px !important; }
+  canvas { background:white; border-radius:10px; height:260px !important; }
 
   /* Right card items stacked cleanly */
   .section-title { font-size:18px; font-weight:700; color:#0b2545; margin-top:10px; margin-bottom:4px; }
   .mini-text { font-size:13px; color:#475569; margin-bottom:10px; }
 
   /* Efficiency bars */
-  .eff-bar { height:18px; background:#e2e8f0; border-radius:6px; overflow:hidden; margin-bottom:14px; }
-  .fill-mos { height:100%; background:#2563eb; width:50%; transition:width .3s; }
-  .fill-gan { height:100%; background:#ef4444; width:50%; transition:width .3s; }
+  .eff-bar { height:18px; background:#e2e8f0; border-radius:6px; overflow:hidden; margin-bottom:14px; width:100%; }
+  .fill-mos { display:block; height:100%; background:#2563eb; width:0%; transition:width .3s; }
+  .fill-gan { display:block; height:100%; background:#ef4444; width:0%; transition:width .3s; }
   .eff-label { display:flex; justify-content:space-between; font-size:13px; margin-top:4px; }
 
   /* Size comparison */
