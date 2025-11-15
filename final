@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>GaN vs MOSFET — Simple Interactive Demo</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  body { font-family: Inter, Arial, sans-serif; background:#eef1f6; margin:0; padding:20px; display:flex; justify-content:center; }
+  .layout { display:grid; grid-template-columns: 1.1fr 0.9fr; gap:20px; max-width:1200px; width:100%; }
+  .left, .right { background:white; border-radius:16px; padding:18px; box-shadow:0 4px 18px rgba(0,0,0,0.1); }
+  .left { display:flex; flex-direction:column; }
+  h1 { margin:0 0 10px; font-size:22px; color:#0b2545; font-weight:700; }
+  p { color:#4b5563; font-size:14px; margin:6px 0 14px; }
+  .row { display:flex; align-items:center; gap:10px; margin-bottom:14px; font-size:14px; }
+  .slider { width:100%; }
+  .value { width:45px; font-weight:600; color:#0b2545; text-align:right; }
+  canvas { background:white; border-radius:10px; height:350px !important; }
+
+  /* Right card items stacked cleanly */
+  .section-title { font-size:18px; font-weight:700; color:#0b2545; margin-top:10px; margin-bottom:4px; }
+  .mini-text { font-size:13px; color:#475569; margin-bottom:10px; }
+
+  /* Efficiency bars */
+  .eff-bar { height:18px; background:#e2e8f0; border-radius:6px; overflow:hidden; margin-bottom:14px; }
+  .fill-mos { height:100%; background:#2563eb; width:50%; transition:width .3s; }
+  .fill-gan { height:100%; background:#ef4444; width:50%; transition:width .3s; }
+  .eff-label { display:flex; justify-content:space-between; font-size:13px; margin-top:4px; }
+
+  /* Size comparison */
+  .size-box { display:flex; justify-content:space-between; gap:10px; margin-bottom:16px; }
+  .cmp { text-align:center; font-size:13px; color:#1e293b; flex:1; }
+  .rect { height:35px; background:#bfd7ff; border-radius:6px; margin:auto; transition:transform 0.35s ease; box-shadow:0 2px 5px rgba(0,0,0,0.15);} 
+  .small { background:#ffc7c7; }
+</style>
+</head>
+<body>
+<div class="layout">
+
+<!-- LEFT COLUMN -->
+<div class="left">
+  <h1>GaN HEMT vs MOSFET — Simple Interactive Comparison</h1>
+  <p>Move the sliders to watch performance change instantly.</p>
+
+  <div class="row">
+    <label>Vg:</label>
+    <input type="range" min="-1" max="1" step="0.05" value="0.3" class="slider" id="vg" oninput="updateAll()" />
+    <div class="value" id="vgVal">0.30</div>
+  </div>
+
+  <div class="row">
+    <label>Vd:</label>
+    <input type="range" min="0.1" max="2.5" step="0.05" value="1.0" class="slider" id="vd" oninput="updateAll()" />
+    <div class="value" id="vdVal">1.00</div>
+  </div>
+  <div class="compare-box" style="margin-top:15px; padding:10px; background:#f8fafc; border-radius:10px;">
+  <strong>Compare at Fixed Vg & Vd</strong><br>
+
+  <div style="display:flex; gap:10px; margin-top:8px; align-items:center;">
+    <div>Vg: <input id="cmpVg" type="number" step="0.01" value="0.30" style="width:70px;"></div>
+    <div>Vd: <input id="cmpVd" type="number" step="0.05" value="1.00" style="width:70px;"></div>
+
+    <button onclick="comparePoint()" 
+      style="padding:4px 10px; border-radius:6px; background:#2563eb; color:white; border:none;">
+      Compare
+    </button>
+
+    <button onclick="clearCompare()" 
+      style="padding:4px 10px; border-radius:6px; background:#64748b; color:white; border:none;">
+      Clear
+    </button>
+  </div>
+
+  <div id="cmpResult" style="margin-top:8px; font-size:13px; color:#334155;"></div>
+</div>
+
+  <canvas id="chart"></canvas>
+</div>
+
+<!-- RIGHT COLUMN -->
+<div class="right">
+
+  <!-- Efficiency -->
+  <div class="section-title">Efficiency Comparison</div>
+  <p class="mini-text">GaN is more efficient because it switches faster and wastes less energy.</p>
+
+  <div class="eff-label"><span>MOSFET</span><span id="mosEffText">85%</span></div>
+  <div class="eff-bar"><div class="fill-mos" id="mosEff"></div></div>
+
+  <div class="eff-label"><span>GaN</span><span id="ganEffText">95%</span></div>
+  <div class="eff-bar"><div class="fill-gan" id="ganEff"></div></div>
+
+  <!-- Size comparison -->
+  <div class="section-title">Size Comparison</div>
+  <p class="mini-text">GaN needs smaller inductors and capacitors.</p>
+
+  <div class="size-box">
+    <div class="cmp">MOSFET<br><div class="rect" id="mosInd" style="width:100px;"></div>Inductor</div>
+    <div class="cmp">GaN<br><div class="rect small" id="ganInd" style="width:55px;"></div>Inductor</div>
+  </div>
+
+  <div class="size-box">
+    <div class="cmp">MOSFET<br><div class="rect" id="mosCap" style="width:90px;"></div>Capacitor</div>
+    <div class="cmp">GaN<br><div class="rect small" id="ganCap" style="width:50px;"></div>Capacitor</div>
+  </div>
+
+  <!-- Real module size -->
+  <div class="section-title">Real Device Form-Factor</div>
+  <p class="mini-text">Approximate space inside an actual power device.</p>
+
+  <div class="size-box">
+    <div class="cmp">MOSFET Module<br><div class="rect" id="mosFF" style="width:110px; height:40px;"></div></div>
+    <div class="cmp">GaN Module<br><div class="rect small" id="ganFF" style="width:65px; height:40px;"></div></div>
+  </div>
+
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+
+function mosfet_Id_A(Vg, Vd) {
+  const Vth = 0.15;
+  const k   = 1e-4;
+
+  if (Vg <= Vth) return 0;
+  const Vov = Vg - Vth;
+
+  if (Vd < Vov) {
+    return k * (Vov * Vd - 0.5 * Vd * Vd);
+  }
+  return 0.5 * k * Vov * Vov;
+}
+
+function hemt_Id_A(Vg, Vd) {
+  const Vth = -0.5;
+  const k   = 1.2e-3;
+
+  if (Vg <= Vth) return 0;
+  const Vov = Vg - Vth;
+
+  if (Vd < Vov) {
+    return k * (Vov * Vd - 0.5 * Vd * Vd);
+  }
+  return 0.5 * k * Vov * Vov;
+}
+
+function generate_curve(type, Vd) {
+  const arr = [];
+  for (let i = 0; i < 100; i++) {
+    const Vg = -1 + (2 * i) / 99;
+    const IdA = (type === "mos")
+      ? mosfet_Id_A(Vg, Vd)
+      : hemt_Id_A(Vg, Vd);
+    arr.push({ x: Vg, y: IdA * 1e6 });
+  }
+  return arr;
+}
+const ctx = document.getElementById("chart").getContext("2d");
+
+let chart = new Chart(ctx, {
+  type: "line",
+  data: { datasets: [] },
+  options: {
+    maintainAspectRatio: false,
+    scales: {
+      x: { min: -1, max: 1, type: "linear", title: { display: true, text: "Vg (V)" }},
+      y: { title: { display: true, text: "Id (µA)" }}
+    },
+    plugins: { legend: { position: "bottom" } },
+    elements: { point: { radius: 0 }}
+  }
+});
+
+function updateAll() {
+  const Vg = parseFloat(document.getElementById("vg").value);
+  const Vd = parseFloat(document.getElementById("vd").value);
+
+  document.getElementById("vgVal").textContent = Vg.toFixed(2);
+  document.getElementById("vdVal").textContent = Vd.toFixed(2);
+
+  chart.data.datasets = [
+    { label: "MOSFET", borderColor: "#2563eb", data: generate_curve("mos", Vd)},
+    { label: "GaN HEMT", borderColor: "#ef4444", data: generate_curve("hemt", Vd)}
+  ];
+
+  chart.update();
+
+  let mos = Math.min(92, 80 + Vd * 2);
+  let gan = Math.min(98, 90 + Vd * 2);
+
+  document.getElementById("mosEff").style.width = mos + "%";
+  document.getElementById("ganEff").style.width = gan + "%";
+
+  document.getElementById("mosEffText").textContent = mos.toFixed(1) + "%";
+  document.getElementById("ganEffText").textContent = gan.toFixed(1) + "%";
+}
+
+updateAll();
+function comparePoint() {
+  const Vg = parseFloat(document.getElementById("cmpVg").value);
+  const Vd = parseFloat(document.getElementById("cmpVd").value);
+
+  const VgClamped = Math.max(-1, Math.min(1, Vg));
+  const VdClamped = Math.max(0.1, Math.min(2.5, Vd));
+
+  const mos = mosfet_Id_A(VgClamped, VdClamped) * 1e6;
+  const gan = hemt_Id_A(VgClamped, VdClamped) * 1e6;
+
+  chart.data.datasets.push(
+    {
+      label: "MOSFET Point",
+      borderColor: "#2563eb",
+      backgroundColor: "#2563eb",
+      pointRadius: 6,
+      showLine: false,
+      data: [{ x: VgClamped, y: mos }]
+    },
+    {
+      label: "GaN Point",
+      borderColor: "#ef4444",
+      backgroundColor: "#ef4444",
+      pointRadius: 6,
+      showLine: false,
+      data: [{ x: VgClamped, y: gan }]
+    }
+  );
+
+  chart.update();
+
+  document.getElementById("cmpResult").innerHTML =
+    `MOSFET Id: <strong>${mos.toFixed(2)} µA</strong><br>` +
+    `GaN Id: <strong>${gan.toFixed(2)} µA</strong>`;
+}
+function clearCompare() {
+  chart.data.datasets = chart.data.datasets.filter(ds =>
+    ds.label !== "MOSFET Point" &&
+    ds.label !== "GaN Point"
+  );
+
+  chart.update();
+  document.getElementById("cmpResult").innerHTML = "";
+}
+</script>
+</body>
+</html>
