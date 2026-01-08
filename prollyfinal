@@ -6,7 +6,7 @@
 <title>GaN vs MOSFET — Simple Interactive Demo</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
-      body { font-family: Inter, Arial, sans-serif; background:#eef1f6; margin:0; padding:20px; display:flex; justify-content:center; }
+       body { font-family: Inter, Arial, sans-serif; background:#eef1f6; margin:0; padding:20px; display:flex; justify-content:center; }
   .layout { display:grid; grid-template-columns: 1.1fr 0.9fr; gap:20px; max-width:1200px; width:100%; }
   .left, .right { background:white; border-radius:16px; padding:18px; box-shadow:0 4px 18px rgba(0,0,0,0.1); }
   .left { display:flex; flex-direction:column; }
